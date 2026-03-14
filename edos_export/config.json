@@ -1,0 +1,46 @@
+{
+  "base_model_name": "microsoft/deberta-v3-base",
+  "encoder_dir": "encoder",
+  "dropout_p": 0.1,
+  "num_labels_task_a": 2,
+  "num_labels_task_b": 5,
+  "num_labels_task_c": 11,
+  "task_a_labels": {
+    "not sexist": 0,
+    "sexist": 1
+  },
+  "task_b_labels": {
+    "none": 0,
+    "1. threats, plans to harm and incitement": 1,
+    "2. derogation": 2,
+    "3. animosity": 3,
+    "4. prejudiced discussions": 4
+  },
+  "task_c_labels": {
+    "none": 0,
+    "1.1 threats of harm": 1,
+    "1.2 incitement and encouragement of harm": 2,
+    "2.1 descriptive attacks": 3,
+    "2.2 aggressive and emotive attacks": 4,
+    "2.3 dehumanising attacks & overt sexual objectification": 5,
+    "3.1 casual use of gendered slurs, profanities, and insults": 6,
+    "3.2 immutable gender differences and gender stereotypes": 7,
+    "3.3 backlash and threatening political opposition": 8,
+    "4.1 supporting mistreatment of individual women": 9,
+    "4.2 supporting systemic discrimination against women as a group": 10
+  },
+  "task_c_short": [
+    "none",
+    "1.1 threats",
+    "1.2 incite",
+    "2.1 desc atk",
+    "2.2 aggr atk",
+    "2.3 dehum",
+    "3.1 slurs",
+    "3.2 stereo",
+    "3.3 backlash",
+    "4.1 indiv",
+    "4.2 systemic"
+  ],
+  "max_len": 128
+}
