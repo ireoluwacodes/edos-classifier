@@ -1,12 +1,81 @@
+import os
+import re
+import zipfile
+import requests
 import streamlit as st
-from model_loader import model_service
 
+MODEL_DIR = "edos_export"
+MODEL_ZIP = "edos_export.zip"
+
+# Replace with your Google Drive file ID
+GOOGLE_DRIVE_FILE_ID = "1LLqA__mCvJsk3rwVlrwRf8KbcVP3cch1"
+DOWNLOAD_URL = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_FILE_ID}"
 
 st.set_page_config(
     page_title="EDOS Classifier",
     page_icon="🧠",
     layout="centered"
 )
+
+
+def _extract_drive_download_request(html: str):
+    action_match = re.search(r'<form id="download-form" action="([^"]+)"', html)
+    if not action_match:
+        return None, None
+
+    action = action_match.group(1)
+    inputs = dict(re.findall(r'<input type="hidden" name="([^"]+)" value="([^"]*)"', html))
+    return action, inputs
+
+
+def _download_file_from_google_drive(destination: str):
+    with requests.Session() as session:
+        response = session.get(DOWNLOAD_URL, stream=True, timeout=300)
+        response.raise_for_status()
+
+        content_type = response.headers.get("Content-Type", "")
+        if "text/html" in content_type:
+            html = response.text
+            action, params = _extract_drive_download_request(html)
+            if not action or not params:
+                raise RuntimeError("Google Drive returned an HTML page instead of the model archive.")
+
+            response = session.get(action, params=params, stream=True, timeout=300)
+            response.raise_for_status()
+
+        with open(destination, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+
+def ensure_model_files():
+    if os.path.exists(MODEL_DIR):
+        return
+
+    try:
+        if not os.path.exists(MODEL_ZIP) or not zipfile.is_zipfile(MODEL_ZIP):
+            st.info("Downloading model files...")
+            _download_file_from_google_drive(MODEL_ZIP)
+
+        if not zipfile.is_zipfile(MODEL_ZIP):
+            raise RuntimeError(
+                "Model download did not produce a valid zip file. "
+                "Check the Google Drive link or replace `edos_export.zip` with a real archive."
+            )
+
+        with zipfile.ZipFile(MODEL_ZIP, "r") as zip_ref:
+            zip_ref.extractall(".")
+
+        st.success("Model downloaded and extracted.")
+    except Exception as exc:
+        st.error(f"Model setup failed: {exc}")
+        st.stop()
+
+
+ensure_model_files()
+
+from model_loader import model_service
 
 st.markdown(
     """
